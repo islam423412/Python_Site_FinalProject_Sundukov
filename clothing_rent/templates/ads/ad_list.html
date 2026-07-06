@@ -1,0 +1,92 @@
+<!-- templates/ads/ad_list.html -->
+
+{% extends 'ads/base.html' %}
+
+{% block title %}Список объявлений{% endblock %}
+
+{% block content %}
+    <h1>Объявления об аренде</h1>
+
+    <!-- Блок для поиска -->
+    <form method="get" class="mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label for="id_q" class="visually-hidden">Поиск по названию...</label>
+                <input type="text" name="q" id="id_q" class="form-control"
+                       placeholder="Поиск по названию..." value="{{ request.GET.q }}">
+                 <div class="col-auto">
+            <label for="id_price" class="visually-hidden">Макс. цена</label>
+            <input type="number" name="price" id="id_price" class="form-control" placeholder="Макс. цена" value="{{ request.GET.price }}">
+        </div>
+            </div>
+            <div class="col-auto">
+                <label for="id_location" class="visually-hidden">Город</label>
+                <input type="text" name="location" id="id_location" class="form-control"
+                       placeholder="Город" value="{{ request.GET.location }}">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Найти</button>
+            </div>
+            {% if user.is_authenticated %}
+                <div class="col-auto">
+                    <a href="{% url 'ad_create' %}" class="btn btn-success">Разместить объявление</a>
+                </div>
+            {% endif %}
+        </div>
+    </form>
+
+   <!-- Блок для вывода самих объявлений -->
+{% if ads %}
+    <div class="row row-cols-1 row-cols-md-2 g-4"> <!-- Создаем сетку: 1 колонка на мобилках, 2 на десктопе -->
+        {% for ad in ads %}
+            <div class="col">
+                <div class="card h-100 shadow-sm"> <!-- Красивая карточка с тенью -->
+                    <div class="card-body d-flex flex-column"> <!-- Используем flexbox для выравнивания -->
+                        <h5 class="card-title">{{ ad.title }}</h5>
+                        <p class="card-text flex-grow-1">{{ ad.description|truncatewords:20 }}</p>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div>
+                                <span class="badge bg-primary text-white">{{ ad.price }} ₽/день</span>
+                            </div>
+                            <a href="{% url 'ad_detail' ad.pk %}" class="btn btn-outline-primary btn-sm stretched-link">
+                                Подробнее
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info" role="alert">
+                Объявлений не найдено. Попробуйте изменить параметры поиска.
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        {% if ads.has_other_pages %}
+            <nav aria-label="...">
+                <ul class="pagination justify-content-center">
+                    {% if ads.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ ads.previous_page_number }}">Назад</a></li>
+                    {% endif %}
+                    {% for num in ads.paginator.page_range %}
+                        {% if ads.number == num %}
+                            <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > ads.number|add:'-3' and num < ads.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if ads.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ ads.next_page_number }}">Вперед</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+
+{% else %}
+    <p>Объявлений пока нет. Вы можете стать первым!</p>
+{% endif %}
+
+{% endblock %}

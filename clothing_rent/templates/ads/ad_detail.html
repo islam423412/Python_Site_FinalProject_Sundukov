@@ -1,0 +1,68 @@
+{% extends 'ads/base.html' %}
+
+{% block title %}{{ ad.title }}{% endblock %}
+
+{% block content %}
+    <div class="row g-3">
+        <div class="col-md-8">
+            <h1>{{ ad.title }}</h1>
+            <p>{{ ad.description|linebreaksbr }}</p>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4><i class="bi bi-wallet-fill me-2"></i> {{ ad.price }} ₽</h4>
+
+                <!-- Кнопка для автора -->
+                {% if user.is_authenticated and user == ad.author %}
+                    <a href="{% url 'ad_edit' ad.pk %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil-square me-1"></i> Редактировать
+                    </a>
+                {% endif %}
+            </div>
+
+            <dl class="row text-muted">
+                <dt class="col-sm-3">Местоположение:</dt>
+                <dd class="col-sm-9">{{ ad.location }}</dd>
+
+                <dt class="col-sm-3">Контакты:</dt>
+                <dd class="col-sm-9">{{ ad.contact_info }}</dd>
+
+                <dt class="col-sm-3">Автор:</dt>
+                <dd class="col-sm-9">{{ ad.author.username }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Отзывы -->
+    <h3>Отзывы</h3>
+    {% if ad.reviews.all %}
+        {% for review in ad.reviews.all %}
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <!-- Блок автора и даты -->
+            <h5 class="card-title">{{ review.author.username }}</h5>
+            <p class="card-subtitle text-muted mb-2">{{ review.created_at|date:"d.m.Y H:i" }} | Оценка: {{ review.rating }}/5</p>
+
+            <!-- Текст отзыва -->
+            <p class="card-text">{{ review.text|linebreaksbr }}</p>
+        </div>
+    </div>
+{% endfor %}
+    {% else %}
+        <p>Пока нет ни одного отзыва. Оставьте первый!</p>
+    {% endif %}
+
+    <!-- Форма отзыва -->
+    {% if user.is_authenticated %}
+        <hr>
+        <h4>Оставить отзыв</h4>
+        <form method="post" class="mb-3">
+            {% csrf_token %}
+            {{ review_form.as_p }}
+            <button type="submit" class="btn btn-primary"><i class="bi bi-pencil me-1"></i> Отправить отзыв</button>
+        </form>
+    {% else %}
+        <p>Чтобы оставить отзыв, необходимо <a href="{% url 'login' %}">войти в систему</a>.</p>
+    {% endif %}
+{% endblock %}
