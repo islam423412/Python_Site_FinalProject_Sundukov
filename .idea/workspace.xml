@@ -5,19 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d7488f30-71e5-4e21-b684-4cb39240e0c2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/clothing_rent/templates/ads/moderation_queue.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/clothing_rent/templates/registration/register.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/PythonProject.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/PythonProject.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/clothing_rent/ads/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/ads/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/clothing_rent/ads/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/ads/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/clothing_rent/clothing_rent/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/clothing_rent/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/clothing_rent/clothing_rent/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/clothing_rent/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/clothing_rent/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/clothing_rent/templates/ads/ad_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/templates/ads/ad_detail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/clothing_rent/templates/ads/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/templates/ads/base.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,6 +52,17 @@
       <updated>1780130589112</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <ignored-roots>
