@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv
+env/
+venv/
+ENV.bak/
+env.bak/
+
+# Django stuff*
+*.log
+local_settings.py
+db.sqlite3
+staticfiles/
+media/
+.coverage
+htmlcov/
+.tox
+.pytest_cache
+
+# Environment variables
+.env

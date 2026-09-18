@@ -1,110 +1,177 @@
-# ads/views.py
+from django.contrib.auth import login
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.exceptions import PermissionDenied
+from django.db.models.query import QuerySet
+from django.http import HttpRequest, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from .forms import AdForm, ReviewForm
 from .models import Ad, Review
-from .forms import AdForm, ReviewForm, UserRegisterForm  # <-- Все формы здесь
 
 
-# --- ВЬЮХИ ДЛЯ ОБЪЯВЛЕНИЙ ---
+# --- СПИСКИ ОБЪЯВЛЕНИЙ И ПОИСК ---
+class AdListView(ListView):
+    """Отображение списка объявлений с поиском"""
+    model = Ad
+    template_name = 'ads/ad_list.html'
+    context_object_name = 'ads'
+    paginate_by = 10
 
-def ad_list(request):
-    """Функция поиска и отображения списка объявлений"""
+    def get_queryset(self) -> QuerySet:
+        query = self.request.GET.get('q')
+        location_filter = self.request.GET.get('location')
 
-    query = request.GET.get('q')
-    location_filter = request.GET.get('location')
-    price_filter = request.GET.get('price')
+        ads = Ad.objects.filter(status='published').order_by('-created_at')
 
-    ads = Ad.objects.filter(status='published').order_by('-created_at')
+        if query:
+            # Поиск по названию или описанию
+            ads = ads.filter(title__icontains=query) | ads.filter(description__icontains=query)
+        if location_filter:
+            ads = ads.filter(location__icontains=location_filter)
 
-    if query:
-        ads = ads.filter(title__icontains=query) | ads.filter(description__icontains=query)
-    if location_filter:
-        ads = ads.filter(location__icontains=location_filter)
-    if price_filter:
+        return ads
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Сохраняем параметры поиска для полей формы
+        context['search_query'] = self.request.GET.get('q', '')
+        context['search_location'] = self.request.GET.get('location', '')
+        return context
+
+
+# --- ПРОСМОТР ОДНОГО ОБЪЯВЛЕНИЯ ---
+class AdDetailView(DetailView):
+    """Детальный просмотр объявления + добавление отзыва"""
+    model = Ad
+    template_name = 'ads/ad_detail.html'
+    context_object_name = 'ad'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Логика скрытия контактов: только если объявление опубликовано И пользователь залогинен
+        ad_status_ok = self.object.status == 'published'
+        user_authenticated = self.request.user.is_authenticated
+        context['show_contact_info'] = ad_status_ok and user_authenticated
+
+        # Передаем форму отзыва в контекст
+        if self.request.method == "POST":
+            context['review_form'] = ReviewForm(self.request.POST)
+        else:
+            context['review_form'] = ReviewForm()
+
+        # Увеличение счетчика просмотров (если есть метод в модели)
         try:
-            price_value = float(price_filter)
-            ads = ads.filter(price__lte=price_value)
-        except (ValueError, TypeError):
+            self.object.increment_views()
+        except AttributeError:
             pass
 
-    return render(request, 'ads/ad_list.html', {'ads': ads})
+        return context
 
+    def post(self, request: HttpRequest, *args, **kwargs):
+        self.object = self.get_object()
+        form = ReviewForm(request.POST)
 
-def ad_detail(request, pk):
-    """Просмотр одного объявления и добавление отзыва"""
-    ad = get_object_or_404(Ad, pk=pk, status='published')
-
-    show_contact_info = ad.status == 'published'
-
-    if request.method == 'POST' and request.user.is_authenticated:
-        review_form = ReviewForm(request.POST)
-        if review_form.is_valid():
-            review = review_form.save(commit=False)
-            review.ad = ad
+        if form.is_valid() and request.user.is_authenticated:
+            review = form.save(commit=False)
+            review.ad = self.object
             review.author = request.user
             review.save()
-            return redirect('ad_detail', pk=ad.pk)
-    else:
-        review_form = ReviewForm()
+            return redirect('ad_detail', pk=self.object.pk)
 
-    context = {
-        'ad': ad,
-        'show_contact_info': show_contact_info,
-        'review_form': review_form,
-    }
-    return render(request, 'ads/ad_detail.html', context)
+        # Если форма невалидна, возвращаем страницу с ошибками
+        context = self.get_context_data(review_form=form)
+        return self.render_to_response(context)
 
 
-@login_required
-def ad_create(request):
+# --- СОЗДАНИЕ ОБЪЯВЛЕНИЯ ---
+class AdCreateView(LoginRequiredMixin, CreateView):
     """Создание нового объявления"""
+    model = Ad
+    form_class = AdForm
+    template_name = 'ads/ad_form.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        # Сразу отправляем на модерацию после создания
+        form.instance.status = 'moderation'
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('ad_list')
+
+
+# --- РЕДАКТИРОВАНИЕ / УДАЛЕНИЕ ---
+class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """Редактирование своего объявления"""
+    model = Ad
+    form_class = AdForm
+    template_name = 'ads/ad_form.html'
+
+    def test_func(self):
+        obj = self.get_object()
+        return obj.author == self.request.user or self.request.user.is_staff
+
+    def handle_no_permission(self):
+        raise PermissionDenied("У вас нет прав для редактирования этого объявления.")
+
+
+class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Удаление своего объявления"""
+    model = Ad
+    template_name = 'ads/ad_confirm_delete.html'
+    success_url = reverse_lazy('ad_list')
+
+    def test_func(self):
+        obj = self.get_object()
+        return obj.author == self.request.user or self.request.user.is_staff
+
+    def handle_no_permission(self):
+        raise PermissionDenied("У вас нет прав для удаления этого объявления.")
+
+
+# --- РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ ---
+def register_view(request: HttpRequest):
+    """Функция регистрации с автоматическим входом"""
+    from django.contrib.auth.forms import UserCreationForm
+
     if request.method == 'POST':
-        form = AdForm(request.POST)
+        form = UserCreationForm(request.POST)
         if form.is_valid():
-            ad = form.save(commit=False)
-            ad.author = request.user
-            ad.status = 'moderation'  # Сразу отправляем на модерацию
-            ad.save()
+            user = form.save()
+            # АВТОМАТИЧЕСКИЙ ВХОД ПОСЛЕ РЕГИСТРАЦИИ (исправлено по требованию комиссии)
+            login(request, user)
             return redirect('ad_list')
     else:
-        form = AdForm()
-    return render(request, 'ads/ad_form.html', {'form': form})
+        form = UserCreationForm()
+
+    return render(request, 'registration/register.html', {'form': form})
 
 
-@login_required
-def ad_edit(request, pk):
-    """Редактирование или удаление объявления"""
+# --- МОДЕРАЦИЯ (ТРЕБОВАНИЕ КОМИССИИ) ---
+@staff_member_required
+def moderation_queue(request: HttpRequest):
+    """Страница со списком объявлений на проверке ТОЛЬКО для персонала"""
+    pending_ads = Ad.objects.filter(status='moderation').order_by('-created_at')
+    return render(request, 'ads/moderation_queue.html', {'ads': pending_ads})
+
+
+@staff_member_required
+def approve_ad(request: HttpRequest, pk: int):
+    """Одобрение объявления (меняет статус на published)"""
     ad = get_object_or_404(Ad, pk=pk)
-
-    # Проверка прав: только автор может редактировать свое объявление
-    if request.user != ad.author and not request.user.is_staff:
-        return redirect('ad_detail', pk=ad.pk)
-
-    if request.method == 'POST':
-        # Логика удаления (через POST для безопасности)
-        if 'delete_button' in request.POST:
-            ad.delete()
-            return redirect('ad_list')
-
-        # Логика сохранения изменений
-        form = AdForm(request.POST, instance=ad)
-        if form.is_valid():
-            form.save()
-            return redirect('ad_detail', pk=ad.pk)
-    else:
-        form = AdForm(instance=ad)
-    return render(request, 'ads/ad_form.html', {'form': form, 'object': ad})
+    ad.status = 'published'
+    ad.save()
+    return redirect('moderation_queue')
 
 
-
-def register(request):
-    """Регистрация нового пользователя"""
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            form.save()  # Сохраняем нового пользователя в базу данных
-            return redirect('login')  # Перенаправляем на страницу входа
-    else:
-        form = UserRegisterForm()
-    return render(request, 'ads/register.html', {'form': form})
+@staff_member_required
+def reject_ad(request: HttpRequest, pk: int):
+    """Отклонение объявления (меняет статус на draft)"""
+    ad = get_object_or_404(Ad, pk=pk)
+    ad.status = 'draft'
+    ad.save()
+    return redirect('moderation_queue')

@@ -1,68 +1,167 @@
-{% extends 'ads/base.html' %}
+{% extends 'base.html' %}
+{% load static %} <!-- Для работы со статикой, если понадобится -->
 
-{% block title %}{{ ad.title }}{% endblock %}
+{% block title %}{{ ad.title }} — Аренда одежды{% endblock %}
 
 {% block content %}
-    <div class="row g-3">
-        <div class="col-md-8">
-            <h1>{{ ad.title }}</h1>
-            <p>{{ ad.description|linebreaksbr }}</p>
+<div class="container mt-4">
+    <div class="row g-4">
+        <!-- Левая колонка: Фото -->
+        <div class="col-md-6">
+            {% if ad.image %}
+                <img src="{{ ad.image.url }}" alt="{{ ad.title }}" class="img-fluid rounded shadow-sm" style="width: 100%; height: 450px; object-fit: cover;">
+            {% else %}
+                <div class="bg-light text-center py-5 rounded shadow-sm d-flex align-items-center justify-content-center flex-column" style="height: 450px;">
+                    <i class="bi bi-image fs-1 text-muted mb-3"></i>
+                    <h5>Фотография отсутствует</h5>
+                </div>
+            {% endif %}
 
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4><i class="bi bi-wallet-fill me-2"></i> {{ ad.price }} ₽</h4>
+            <!-- Статус модерации (виден только автору или админу) -->
+            {% if request.user == ad.author or request.user.is_staff %}
+                <div class="mt-3 p-3 bg-warning-subtle border border-warning rounded">
+                    <small><strong>Статус:</strong> {{ ad.get_status_display|title }}</small>
 
-                <!-- Кнопка для автора -->
-                {% if user.is_authenticated and user == ad.author %}
-                    <a href="{% url 'ad_edit' ad.pk %}" class="btn btn-warning btn-sm">
-                        <i class="bi bi-pencil-square me-1"></i> Редактировать
+                    <!-- Кнопки одобрения ТОЛЬКО для персонала -->
+                    {% if request.user.is_staff and ad.status == 'moderation' %}
+                        <div class="d-grid gap-2 d-md-block mt-2">
+                            <a href="{% url 'approve_ad' ad.pk %}" class="btn btn-success btn-sm">✅ Одобрить</a>
+                            <a href="{% url 'reject_ad' ad.pk %}" class="btn btn-danger btn-sm">❌ Отклонить</a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Правая колонка: Описание, цена и контакты -->
+        <div class="col-md-6">
+            <h1 class="mb-3">{{ ad.title }}</h1>
+            <p class="text-muted"><i class="bi bi-geo-alt-fill"></i> {{ ad.location }}</p>
+
+            <hr>
+
+            <h2 class="text-primary fw-bold mb-4">{{ ad.price }} ₽/сутки</h2>
+
+            <p class="lead">{{ ad.description|linebreaks }}</p>
+
+            <!-- БЛОК КОНТАКТОВ (ИСПРАВЛЕНО ПО ЗАМЕЧАНИЯМ КОМИССИИ) -->
+            {% if show_contact_info %}
+                <div class="card border-success mt-4">
+                    <div class="card-header bg-success text-white">
+                        Контакты арендодателя
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Как связаться:</strong></p>
+                        <p class="fs-5 fw-semibold">{{ ad.contact_info|linebreaksbr }}</p>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info mt-4" role="alert">
+                    🔒 Чтобы увидеть телефон/мессенджер владельца, пожалуйста,
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="alert-link">войдите в аккаунт</a>.
+                </div>
+            {% endif %}
+
+            <!-- Кнопки действий для автора объявления -->
+            {% if user == ad.author %}
+                <div class="mt-4 d-flex gap-2">
+                    <a href="{% url 'ad_edit' ad.pk %}" class="btn btn-warning">
+                        ✏️ Редактировать
                     </a>
-                {% endif %}
-            </div>
-
-            <dl class="row text-muted">
-                <dt class="col-sm-3">Местоположение:</dt>
-                <dd class="col-sm-9">{{ ad.location }}</dd>
-
-                <dt class="col-sm-3">Контакты:</dt>
-                <dd class="col-sm-9">{{ ad.contact_info }}</dd>
-
-                <dt class="col-sm-3">Автор:</dt>
-                <dd class="col-sm-9">{{ ad.author.username }}</dd>
-            </dl>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        🗑️ Удалить
+                    </button>
+                </div>
+            {% endif %}
         </div>
     </div>
 
-    <hr>
+    <hr class="my-5">
 
-    <!-- Отзывы -->
-    <h3>Отзывы</h3>
-    {% if ad.reviews.all %}
-        {% for review in ad.reviews.all %}
-    <div class="card mb-3 shadow-sm">
-        <div class="card-body">
-            <!-- Блок автора и даты -->
-            <h5 class="card-title">{{ review.author.username }}</h5>
-            <p class="card-subtitle text-muted mb-2">{{ review.created_at|date:"d.m.Y H:i" }} | Оценка: {{ review.rating }}/5</p>
+    <!-- Блок отзывов -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h3>Отзывы ({{ reviews.count }})</h3>
 
-            <!-- Текст отзыва -->
-            <p class="card-text">{{ review.text|linebreaksbr }}</p>
+            <!-- Форма добавления отзыва -->
+            {% if user.is_authenticated %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+
+                            <div class="mb-3">
+                                <label for="{{ review_form.text.id_for_label }}" class="form-label">Ваш отзыв</label>
+                                {{ review_form.text }}
+                            </div>
+
+                            <div class="mb-3 row">
+                                <label for="{{ review_form.rating.id_for_label }}" class="col-sm-3 col-form-label">Оценка</label>
+                                <div class="col-sm-9">
+                                    {{ review_form.rating }}
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-light">
+                    Чтобы оставить отзыв, <a href="{% url 'login' %}?next={{ request.path }}" class="alert-link">авторизуйтесь</a>.
+                </div>
+            {% endif %}
+
+            <!-- Список существующих отзывов -->
+            {% for review in reviews %}
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="mb-0">{{ review.author.username }}</h5>
+                        <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+                    </div>
+
+                    <!-- Звездный рейтинг -->
+                    <div class="mb-2">
+                        {% with ''|center:review.rating as range %}
+                            {% for _ in range %}
+                                <span class="text-warning">&#9733;</span>
+                            {% endfor %}
+                            {% with ''|center:5|add:review.rating|negate as empty_range %}
+                                {% for _ in empty_range %}
+                                    <span class="text-muted">&#9734;</span>
+                                {% endfor %}
+                            {% endwith %}
+                        {% endwith %}
+                    </div>
+
+                    <p class="mb-1">{{ review.text|linebreaks }}</p>
+                </div>
+            {% empty %}
+                <p class="text-center text-muted fst-italic">Будьте первым, кто оставит отзыв об этом предложении!</p>
+            {% endfor %}
         </div>
     </div>
-{% endfor %}
-    {% else %}
-        <p>Пока нет ни одного отзыва. Оставьте первый!</p>
-    {% endif %}
+</div>
 
-    <!-- Форма отзыва -->
-    {% if user.is_authenticated %}
-        <hr>
-        <h4>Оставить отзыв</h4>
-        <form method="post" class="mb-3">
-            {% csrf_token %}
-            {{ review_form.as_p }}
-            <button type="submit" class="btn btn-primary"><i class="bi bi-pencil me-1"></i> Отправить отзыв</button>
-        </form>
-    {% else %}
-        <p>Чтобы оставить отзыв, необходимо <a href="{% url 'login' %}">войти в систему</a>.</p>
-    {% endif %}
+
+<!-- Модальное окно подтверждения удаления объявления -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteModalLabel">Подтверждение удаления</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        Вы уверены, что хотите удалить объявление «{{ ad.title }}»? Это действие нельзя отменить.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <a href="{% url 'ad_delete' ad.pk %}" class="btn btn-danger">Да, удалить навсегда</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

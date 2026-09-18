@@ -1,14 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="d7488f30-71e5-4e21-b684-4cb39240e0c2" name="Changes" comment="" />
+    <list default="true" id="d7488f30-71e5-4e21-b684-4cb39240e0c2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/clothing_rent/templates/ads/moderation_queue.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/clothing_rent/templates/registration/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/PythonProject.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/PythonProject.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clothing_rent/ads/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/ads/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clothing_rent/ads/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/ads/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clothing_rent/clothing_rent/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/clothing_rent/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clothing_rent/clothing_rent/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/clothing_rent/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clothing_rent/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/db.sqlite3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clothing_rent/templates/ads/ad_detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/templates/ads/ad_detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clothing_rent/templates/ads/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/clothing_rent/templates/ads/base.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/clothing_rent" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -19,20 +36,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "settings.editor.selected.configurable": "com.intellij.pycharm.community.ide.impl.configuration.PythonContentEntriesConfigurable"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/sundu/MyProjects/PythonProject/PythonProject&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-1cd77e80b48f-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.32098.74" />
+        <option value="bundled-python-sdk-5781019d23a5-cbfc7b97e6b2-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.28539.58" />
       </set>
     </attachedChunks>
   </component>
@@ -45,5 +64,10 @@
       <updated>1780130589112</updated>
     </task>
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/clothing_rent" />
+    </ignored-roots>
   </component>
 </project>
