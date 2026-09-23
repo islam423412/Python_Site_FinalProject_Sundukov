@@ -2,17 +2,18 @@ from django.contrib.auth import login
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
+from django.db.models import Avg, FloatField  # <-- ИЗМЕНИЛ ТУТ: добавил FloatField напрямую
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-
+from django.contrib.auth.forms import UserCreationForm
+# Импорт моделей Ads и Review тоже должен быть здесь
 from .forms import AdForm, ReviewForm
 from .models import Ad, Review
 
 
-# --- СПИСКИ ОБЪЯВЛЕНИЙ И ПОИСК ---
 class AdListView(ListView):
     """Отображение списка объявлений с поиском"""
     model = Ad
@@ -27,7 +28,6 @@ class AdListView(ListView):
         ads = Ad.objects.filter(status='published').order_by('-created_at')
 
         if query:
-            # Поиск по названию или описанию
             ads = ads.filter(title__icontains=query) | ads.filter(description__icontains=query)
         if location_filter:
             ads = ads.filter(location__icontains=location_filter)
@@ -36,13 +36,11 @@ class AdListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Сохраняем параметры поиска для полей формы
         context['search_query'] = self.request.GET.get('q', '')
         context['search_location'] = self.request.GET.get('location', '')
         return context
 
 
-# --- ПРОСМОТР ОДНОГО ОБЪЯВЛЕНИЯ ---
 class AdDetailView(DetailView):
     """Детальный просмотр объявления + добавление отзыва"""
     model = Ad
@@ -52,18 +50,35 @@ class AdDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Логика скрытия контактов: только если объявление опубликовано И пользователь залогинен
+        # --- РАСЧЕТ ЗВЕЗД (НОВОЕ) ---
+        reviews_count = self.object.reviews.count()
+
+        if reviews_count > 0:
+            avg_rating = self.object.reviews.aggregate(
+                avg=Avg('rating', output_field=FloatField())
+            )['avg']
+
+            full_stars = int(round(avg_rating))
+            empty_stars = 5 - full_stars
+
+            context['full_stars'] = range(full_stars)
+            context['empty_stars'] = range(empty_stars)
+            context['reviews_avg'] = round(avg_rating, 1)
+        else:
+            context['full_stars'] = []
+            context['empty_stars'] = range(5)
+            context['reviews_avg'] = None
+        # --- КОНЕЦ РАСЧЕТА ---
+
         ad_status_ok = self.object.status == 'published'
         user_authenticated = self.request.user.is_authenticated
         context['show_contact_info'] = ad_status_ok and user_authenticated
 
-        # Передаем форму отзыва в контекст
         if self.request.method == "POST":
             context['review_form'] = ReviewForm(self.request.POST)
         else:
             context['review_form'] = ReviewForm()
 
-        # Увеличение счетчика просмотров (если есть метод в модели)
         try:
             self.object.increment_views()
         except AttributeError:
@@ -82,12 +97,10 @@ class AdDetailView(DetailView):
             review.save()
             return redirect('ad_detail', pk=self.object.pk)
 
-        # Если форма невалидна, возвращаем страницу с ошибками
         context = self.get_context_data(review_form=form)
         return self.render_to_response(context)
 
 
-# --- СОЗДАНИЕ ОБЪЯВЛЕНИЯ ---
 class AdCreateView(LoginRequiredMixin, CreateView):
     """Создание нового объявления"""
     model = Ad
@@ -96,7 +109,6 @@ class AdCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        # Сразу отправляем на модерацию после создания
         form.instance.status = 'moderation'
         return super().form_valid(form)
 
@@ -104,7 +116,6 @@ class AdCreateView(LoginRequiredMixin, CreateView):
         return reverse_lazy('ad_list')
 
 
-# --- РЕДАКТИРОВАНИЕ / УДАЛЕНИЕ ---
 class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """Редактирование своего объявления"""
     model = Ad
@@ -133,17 +144,13 @@ class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         raise PermissionDenied("У вас нет прав для удаления этого объявления.")
 
 
-# --- РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ ---
 def register_view(request: HttpRequest):
     """Функция регистрации с автоматическим входом"""
-    from django.contrib.auth.forms import UserCreationForm
-
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # АВТОМАТИЧЕСКИЙ ВХОД ПОСЛЕ РЕГИСТРАЦИИ (исправлено по требованию комиссии)
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('ad_list')
     else:
         form = UserCreationForm()
@@ -151,10 +158,9 @@ def register_view(request: HttpRequest):
     return render(request, 'registration/register.html', {'form': form})
 
 
-# --- МОДЕРАЦИЯ (ТРЕБОВАНИЕ КОМИССИИ) ---
 @staff_member_required
 def moderation_queue(request: HttpRequest):
-    """Страница со списком объявлений на проверке ТОЛЬКО для персонала"""
+    """Страница очереди на проверку (только для персонала)"""
     pending_ads = Ad.objects.filter(status='moderation').order_by('-created_at')
     return render(request, 'ads/moderation_queue.html', {'ads': pending_ads})
 
