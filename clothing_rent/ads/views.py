@@ -2,14 +2,14 @@ from django.contrib.auth import login
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Avg, FloatField  # <-- ИЗМЕНИЛ ТУТ: добавил FloatField напрямую
+from django.db import models  # <-- ИСПРАВЛЕНО: Добавлен импорт для NameError
+from django.db.models import Avg
 from django.db.models.query import QuerySet
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
-from django.contrib.auth.forms import UserCreationForm
-# Импорт моделей Ads и Review тоже должен быть здесь
+
 from .forms import AdForm, ReviewForm
 from .models import Ad, Review
 
@@ -50,12 +50,12 @@ class AdDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # --- РАСЧЕТ ЗВЕЗД (НОВОЕ) ---
+        # --- РАСЧЕТ ЗВЕЗД (ПЕРЕНЕСЕНО ИЗ HTML) ---
         reviews_count = self.object.reviews.count()
 
         if reviews_count > 0:
             avg_rating = self.object.reviews.aggregate(
-                avg=Avg('rating', output_field=FloatField())
+                avg=Avg('rating', output_field=models.FloatField())
             )['avg']
 
             full_stars = int(round(avg_rating))

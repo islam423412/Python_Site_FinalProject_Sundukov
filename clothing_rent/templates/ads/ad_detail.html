@@ -121,19 +121,18 @@
                         <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
                     </div>
                     
-                    <!-- Звездный рейтинг (БЕЗОПАСНЫЙ ВАРИАНТ БЕЗ NEGATE) -->
-                    <div class="mb-2">
-                        {% for _ in full_stars %}
-                            <span class="text-warning">&#9733;</span>
-                        {% endfor %}
-                        {% for _ in empty_stars %}
-                            <span class="text-muted">&#9734;</span>
-                        {% endfor %}
-
-                        {% if reviews_avg is not None %}
-                            <small class="text-muted ms-2">({{ reviews_avg }}/5)</small>
-                        {% endif %}
-                    </div>
+                    <!-- Звездный рейтинг -->
+<div class="mb-2">
+    {% for _ in full_stars %}
+        <span class="text-warning">&#9733;</span>
+    {% endfor %}
+    {% for _ in empty_stars %}
+        <span class="text-muted">&#9734;</span>
+    {% endfor %}
+    {% if reviews_avg is not None %}
+        <small class="text-muted ms-2">({{ reviews_avg }}/5)</small>
+    {% endif %}
+</div>
 
                     <p class="mb-1">{{ review.text|linebreaks }}</p>
                 </div>
