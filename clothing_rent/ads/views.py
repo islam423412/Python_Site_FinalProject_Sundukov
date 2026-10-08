@@ -1,8 +1,9 @@
 from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm  # <-- ИСПРАВЛЕНО: Добавлен импорт
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
-from django.db import models  # <-- ИСПРАВЛЕНО: Добавлен импорт для NameError
+from django.db import models  # Для Avg и FloatField
 from django.db.models import Avg
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponseRedirect
@@ -17,7 +18,7 @@ from .models import Ad, Review
 class AdListView(ListView):
     """Отображение списка объявлений с поиском"""
     model = Ad
-    template_name = 'ads/ad_list.html'
+    template_name = 'ad_list.html'  # <-- ИСПРАВЛЕНО: убрано 'ads/'
     context_object_name = 'ads'
     paginate_by = 10
 
@@ -44,7 +45,7 @@ class AdListView(ListView):
 class AdDetailView(DetailView):
     """Детальный просмотр объявления + добавление отзыва"""
     model = Ad
-    template_name = 'ads/ad_detail.html'
+    template_name = 'ad_detail.html'  # <-- ИСПРАВЛЕНО: убрано 'ads/'
     context_object_name = 'ad'
 
     def get_context_data(self, **kwargs):
@@ -105,7 +106,7 @@ class AdCreateView(LoginRequiredMixin, CreateView):
     """Создание нового объявления"""
     model = Ad
     form_class = AdForm
-    template_name = 'ads/ad_form.html'
+    template_name = 'ad_form.html'  # <-- ИСПРАВЛЕНО: убрано 'ads/'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -120,7 +121,7 @@ class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """Редактирование своего объявления"""
     model = Ad
     form_class = AdForm
-    template_name = 'ads/ad_form.html'
+    template_name = 'ad_form.html'  # <-- ИСПРАВЛЕНО: убрано 'ads/'
 
     def test_func(self):
         obj = self.get_object()
@@ -133,7 +134,7 @@ class AdUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """Удаление своего объявления"""
     model = Ad
-    template_name = 'ads/ad_confirm_delete.html'
+    template_name = 'ad_confirm_delete.html'  # <-- ИСПРАВЛЕНО: убрано 'ads/'
     success_url = reverse_lazy('ad_list')
 
     def test_func(self):
@@ -147,7 +148,7 @@ class AdDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 def register_view(request: HttpRequest):
     """Функция регистрации с автоматическим входом"""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = UserCreationForm(request.POST)  # <-- Теперь импорт найден
         if form.is_valid():
             user = form.save()
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
@@ -162,7 +163,7 @@ def register_view(request: HttpRequest):
 def moderation_queue(request: HttpRequest):
     """Страница очереди на проверку (только для персонала)"""
     pending_ads = Ad.objects.filter(status='moderation').order_by('-created_at')
-    return render(request, 'ads/moderation_queue.html', {'ads': pending_ads})
+    return render(request, 'moderation_queue.html', {'ads': pending_ads})
 
 
 @staff_member_required
