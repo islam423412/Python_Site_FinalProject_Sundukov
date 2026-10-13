@@ -1,59 +1,38 @@
 {% extends 'base.html' %}
-{% load static %} <!-- На случай, если будем использовать картинки -->
+{% load static %}
 
 {% block title %}Модерация объявлений{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Ожидают проверки</h1>
-
-        <!-- Кнопка возврата на главную -->
-        <a href="{% url 'ad_list' %}" class="btn btn-outline-secondary">
-            &larr; Вернуться к объявлениям
-        </a>
-    </div>
+    <h1 class="mb-4">Ожидают модерации</h1>
 
     {% if ads %}
-        <!-- Список карточек с объявлениями -->
-        {% for ad in ads %}
-        <div class="card border-start border-warning border-5 mb-3 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h5 class="card-title">{{ ad.title }}</h5>
-                        <p class="card-text text-muted small">
-                            Автор: {{ ad.author.username }} |
-                            Локация: {{ ad.location }}
-                        </p>
-                        <p class="card-text">{{ ad.description|linebreaks|truncatewords:40 }}</p>
+        <div class="list-group">
+            {% for ad in ads %}
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ ad.title }}</h5>
+                        <small>{{ ad.created_at|date:"d.m.Y H:i" }}</small>
                     </div>
-                    <div class="text-end">
-                        <h4 class="mb-3 fw-bold text-primary">{{ ad.price }} ₽/сут</h4>
-
-                        <!-- Кнопки действий модератора -->
-                        <form method="post" action="{% url 'approve_ad' ad.pk %}" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success me-2 mb-1">
-                                ✅ Одобрить
-                            </button>
-                        </form>
-
-                        <form method="post" action="{% url 'reject_ad' ad.pk %}" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger mb-1">
-                                ❌ Отклонить
-                            </button>
-                        </form>
+                    <p class="mb-1">{{ ad.description|truncatewords:20 }}</p>
+                    <small>Локация: {{ ad.location }}</small>
+                    <div class="mt-2">
+                        <!-- Кнопка Одобрить -->
+                        <a href="{% url 'approve_ad' ad.pk %}" class="btn btn-success btn-sm me-2">
+                            ✅ Одобрить
+                        </a>
+                        <!-- Кнопка Отклонить -->
+                        <a href="{% url 'reject_ad' ad.pk %}" class="btn btn-danger btn-sm">
+                            ❌ Отклонить
+                        </a>
                     </div>
                 </div>
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     {% else %}
-        <!-- Сообщение, если новых объявлений нет -->
         <div class="alert alert-info">
-            Сейчас нет объявлений на проверке. Можно отдохнуть! ☕
+            Нет объявлений, ожидающих проверки.
         </div>
     {% endif %}
 </div>

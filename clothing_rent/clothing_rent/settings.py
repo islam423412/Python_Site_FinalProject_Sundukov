@@ -57,13 +57,12 @@ ROOT_URLCONF = 'clothing_rent.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # Путь к папке templates в корне проекта
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates'],  # <-- Должно быть так
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request', # Обязательно для show_contact_info
+                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -115,11 +114,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# ВНИМАНИЕ: Папки 'static' в корне проекта нет, поэтому закомментировано, чтобы убрать Warning W004
-# Если ты создашь папку 'static' в корне (рядом с manage.py), раскомментируй строку ниже:
-# STATICFILES_DIRS = [BASE_DIR / "static"]
 
-# Media files (User uploaded content like ad images)
+STATICFILES_DIRS = []
+
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 

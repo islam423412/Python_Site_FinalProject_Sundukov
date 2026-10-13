@@ -6,10 +6,9 @@ from .models import Ad, Review
 class AdForm(forms.ModelForm):
     """
     Форма для создания и редактирования объявления.
-    Использует виджеты Bootstrap для красивого отображения.
     """
 
-    # Переопределяем поле contact_info, чтобы сделать его текстовой областью (textarea)
+    # Переопределяем поле contact_info, чтобы сделать его текстовой областью
     contact_info = forms.CharField(
         widget=forms.Textarea(attrs={
             'rows': 3,
@@ -20,13 +19,13 @@ class AdForm(forms.ModelForm):
 
     class Meta:
         model = Ad
+        # --- ИСПРАВЛЕНО: Это список в квадратных скобках, а не строка ---
         fields = [
             'title',
             'description',
             'price',
             'location',
-            'contact_info'
-            # УДАЛИЛИ СТРОЧКУ С 'image'
+            'contact_info',
         ]
 
         widgets = {
@@ -34,25 +33,15 @@ class AdForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
             'price': forms.NumberInput(attrs={'class': 'form-control'}),
             'location': forms.TextInput(attrs={'class': 'form-control'}),
-            # Виджет для image тоже можно удалить отсюда
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Добавляем класс Bootstrap ко всем полям, если они не переопределены выше
-        for field_name in self.fields:
-            if field_name != 'contact_info' and field_name != 'image':
-                self.fields[field_name].widget.attrs.update({'class': 'form-control'})
 
 
 # --- ФОРМА ДОБАВЛЕНИЯ ОТЗЫВА ---
 class ReviewForm(forms.ModelForm):
     """
     Форма для добавления отзыва к объявлению.
-    Рейтинг реализован через RadioSelect (кнопки-переключатели).
     """
-
-    # Явно определяем рейтинг как ChoiceField с радиокнопками
     rating = forms.ChoiceField(
         choices=[(i, str(i)) for i in range(1, 6)],  # Оценки от 1 до 5
         widget=forms.RadioSelect,
@@ -62,7 +51,7 @@ class ReviewForm(forms.ModelForm):
 
     class Meta:
         model = Review
-        fields = ['text', 'rating']  # Порядок важен!
+        fields = ['text', 'rating']
 
         widgets = {
             'text': forms.Textarea(attrs={
@@ -71,8 +60,3 @@ class ReviewForm(forms.ModelForm):
                 'placeholder': 'Расскажите о своем опыте аренды...'
             }),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Убираем метку у поля text, так как она обычно не нужна над большим полем
-        self.fields['text'].label = ''

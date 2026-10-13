@@ -59,12 +59,8 @@
             <!-- Кнопки действий для автора -->
             {% if user == ad.author %}
                 <div class="mt-4 d-flex gap-2">
-                    <a href="{% url 'ad_edit' ad.pk %}" class="btn btn-warning">
-                        ✏️ Редактировать
-                    </a>
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                        🗑️ Удалить
-                    </button>
+                    <a href="{% url 'ad_edit' ad.pk %}" class="btn btn-warning">✏️ Редактировать</a>
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">🗑️ Удалить</button>
                 </div>
             {% endif %}
         </div>
@@ -75,7 +71,7 @@
     <!-- Блок отзывов -->
     <div class="row">
         <div class="col-lg-8 mx-auto">
-            <h3>Отзывы ({{ reviews.count }})</h3>
+            <h3>Отзывы ({{ ad.reviews.count }})</h3>
 
             <!-- Форма добавления отзыва -->
             {% if user.is_authenticated %}
@@ -84,7 +80,7 @@
                         <form method="POST">
                             {% csrf_token %}
                             <input type="hidden" name="next" value="{{ request.path }}">
-                            
+
                             <div class="mb-3">
                                 {{ review_form.text.label_tag }}
                                 {{ review_form.text }}
@@ -92,7 +88,7 @@
                                     <div class="text-danger small">{{ review_form.text.errors }}</div>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="mb-3 row">
                                 <label class="col-sm-3 col-form-label"><strong>Оценка:</strong></label>
                                 <div class="col-sm-9">
@@ -102,7 +98,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-primary w-100">Отправить отзыв</button>
                         </form>
                     </div>
@@ -114,30 +110,36 @@
             {% endif %}
 
             <!-- Список существующих отзывов -->
-            {% for review in reviews %}
+            {% for review in ad.reviews.all %}
                 <div class="border-bottom pb-3 mb-3">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <h5 class="mb-0">{{ review.author.username }}</h5>
                         <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
                     </div>
-                    
-                    <!-- Звездный рейтинг -->
-<div class="mb-2">
-    {% for _ in full_stars %}
-        <span class="text-warning">&#9733;</span>
-    {% endfor %}
-    {% for _ in empty_stars %}
-        <span class="text-muted">&#9734;</span>
-    {% endfor %}
-    {% if reviews_avg is not None %}
-        <small class="text-muted ms-2">({{ reviews_avg }}/5)</small>
-    {% endif %}
-</div>
+
+                    <!-- Звездный рейтинг (ПРОСТОЙ ВАРИАНТ БЕЗ add/center) -->
+                    <div class="mb-2">
+                        {% if reviews_avg %}
+                            <!-- Желтые звезды -->
+                            {% for _ in full_stars %}
+                                <span class="text-warning">&#9733;</span>
+                            {% endfor %}
+                            <!-- Пустые звезды -->
+                            {% for _ in empty_stars %}
+                                <span class="text-muted">&#9734;</span>
+                            {% endfor %}
+                        {% else %}
+                            <!-- Если отзывов еще нет -->
+                            <span class="text-muted">&#9734;&#9734;&#9734;&#9734;&#9734;</span>
+                        {% endif %}
+                    </div>
 
                     <p class="mb-1">{{ review.text|linebreaks }}</p>
                 </div>
             {% empty %}
-                <p class="text-center text-muted fst-italic">Будьте первым, кто оставит отзыв об этом предложении!</p>
+                <div class="alert alert-info">
+                    Будьте первым, кто оставит отзыв об этом предложении!
+                </div>
             {% endfor %}
         </div>
     </div>
@@ -153,7 +155,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
       </div>
       <div class="modal-body">
-        Вы уверены, что хотите удалить объявление «{{ ad.title }}»? Это действие нельзя отменить.
+        Вы уверены, что хотите удалить объявление «{{ ad.title }}»?
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
