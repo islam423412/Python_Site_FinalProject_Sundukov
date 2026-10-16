@@ -1,0 +1,30 @@
+{% extends 'ads/base.html' %}
+
+{% block title %}
+    {% if object %}
+        Редактирование объявления "{{ object.title }}"
+    {% else %}
+        Новое объявление
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <h1>{% if object %}Редактировать{% else %}Создать{% endif %} объявление</h1>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Выводит все поля формы -->
+        {{ form.as_p }}
+
+        <button type="submit" class="btn btn-primary mt-3">{% if object %}Сохранить изменения{% else %}Опубликовать{% endif %}</button>
+
+        {% if object %}
+            <!-- Кнопка удаления только при редактировании -->
+            <button type="submit" name="delete_button" class="btn btn-danger mt-3 ms-2"
+                onclick="return confirm('Вы уверены, что хотите удалить это объявление?')">
+                Удалить объявление
+            </button>
+        {% endif %}
+    </form>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Модерация объявлений{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Ожидают модерации</h1>
+
+    {% if ads %}
+        <div class="list-group">
+            {% for ad in ads %}
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ ad.title }}</h5>
+                        <small>{{ ad.created_at|date:"d.m.Y H:i" }}</small>
+                    </div>
+                    <p class="mb-1">{{ ad.description|truncatewords:20 }}</p>
+                    <small>Локация: {{ ad.location }}</small>
+                    <div class="mt-2">
+                        <!-- Кнопка Одобрить -->
+                        <a href="{% url 'approve_ad' ad.pk %}" class="btn btn-success btn-sm me-2">
+                            ✅ Одобрить
+                        </a>
+                        <!-- Кнопка Отклонить -->
+                        <a href="{% url 'reject_ad' ad.pk %}" class="btn btn-danger btn-sm">
+                            ❌ Отклонить
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            Нет объявлений, ожидающих проверки.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
