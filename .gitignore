@@ -1,42 +1,23 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual Environments
-.venv
+# Python virtual environments
+.venv/
 env/
 venv/
-ENV.bak/
-env.bak/
+__pycache__
+*.pyc
 
-# Django stuff*
-*.log
-local_settings.py
-db.sqlite3
-staticfiles/
+# Databases and media
+*.sqlite3
 media/
-.coverage
-htmlcov/
-.tox
-.pytest_cache
+staticfiles/
 
 # Environment variables
-.env
+.env*
+!.env.example
+
+# IDE files
+.idea/
+.DS_Store
+
+# Build artifacts
+dist/
+build/
