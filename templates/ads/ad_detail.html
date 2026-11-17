@@ -127,7 +127,7 @@
                             {% for _ in total_stars %}
                                 <span class="text-warning">&#9733;</span>
                             {% endfor %}
-                            {% with '5'|center:5|add:-reviews_avg as empty_stars %}
+                            {% with '5'|center:5|add:reviews_avg as empty_stars %}
                                 {% for _ in empty_stars %}
                                     <span class="text-muted">&#9734;</span>
                                 {% endfor %}

@@ -77,41 +77,35 @@ class AdDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        ad = self.object
 
-        # Проверка прав доступа к контактам
-        ad_status_ok = self.object.status == 'published'
-        user_authenticated = self.request.user.is_authenticated
-        context['show_contact_info'] = ad_status_ok and user_authenticated
+        # 1. Считаем средний рейтинг
+        # Используем aggregate, чтобы не делать лишних запросов
+        from django.db.models import Avg
+        avg_rating = ad.reviews.aggregate(Avg('rating'))['rating__avg']
 
-        # Формируем форму отзыва
-        if self.request.method == "POST":
-            context['review_form'] = ReviewForm(self.request.POST)
+        if avg_rating:
+            avg_rating = round(avg_rating, 1)
+            context['reviews_avg'] = avg_rating
+            # Считаем количество закрашенных звезд (округляем вверх)
+            import math
+            full_count = math.ceil(avg_rating)
+            empty_count = 5 - full_count
         else:
+            context['reviews_avg'] = None
+            full_count = 0
+            empty_count = 5
+
+        # 2. Передаем списки для циклов в шаблоне
+        context['full_stars'] = range(full_count)
+        context['empty_stars'] = range(empty_count)
+
+        # 3. Передаем форму (не забудь про неё!)
+        from .forms import ReviewForm  # проверь правильность импорта
+        if self.request.user.is_authenticated:
             context['review_form'] = ReviewForm()
 
-        # Рассчитываем рейтинг
-        reviews_count = self.object.reviews.count()
-        avg_rating = None
-        full_stars = []
-        empty_stars = list(range(5))
-
-        if reviews_count > 0:
-            avg_val = self.object.reviews.aggregate(avg=Avg('rating'))['avg']
-            if avg_val:
-                avg_rating = round(avg_val, 1)
-                full_stars = list(range(int(round(avg_rating))))
-                empty_stars = list(range(5 - len(full_stars)))
-
-        context.update({
-            'reviews_avg': avg_rating,
-            'full_stars': full_stars,
-            'empty_stars': empty_stars,
-        })
-
-        try:
-            self.object.increment_views()
-        except AttributeError:
-            pass
+        context['show_contact_info'] = self.request.user == ad.author or self.request.user.is_staff
 
         return context
 
